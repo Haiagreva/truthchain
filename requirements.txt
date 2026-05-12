@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+supabase
+python-dotenv
+pyteal
+py-algorand-sdk
+sentence-transformers
+pandas
+huggingface_hub
+
+

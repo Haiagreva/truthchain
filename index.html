@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthChain / Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        twitter: '#1D9BF0',
+                        twitterHover: '#1A8CD8',
+                        black: '#000000',
+                        grayBorder: '#2F3336',
+                        textGray: '#71767B',
+                        bgHover: '#16181C',
+                        verified: '#00BA7C',
+                        refuted: '#F91880',
+                        uncertain: '#FFD400'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #000000; color: #E7E9EA; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-active { overflow: hidden; }
+        @keyframes slideInBlock {
+            0% { opacity: 0; transform: translateY(-12px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .block-card-enter { animation: slideInBlock 0.4s ease-out forwards; }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 8px rgba(29, 155, 240, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(29, 155, 240, 0.6); }
+        }
+        .pulse-glow { animation: pulseGlow 1.5s ease-in-out infinite; }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen relative">
+    
+    <!-- Node Selection Modal (Demo Login Screen) -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+        <div class="bg-black border border-grayBorder rounded-3xl w-full max-w-2xl p-8 shadow-[0_0_40px_rgba(29,155,240,0.1)]">
+            <div class="flex justify-center mb-6">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="w-12 h-12 fill-current text-white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-center mb-2">Select Your Node</h2>
+            <p class="text-textGray text-center mb-8">Choose an identity to participate in network consensus.</p>
+            
+            <div id="nodeGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <!-- Populated dynamically -->
+                <div class="text-center text-textGray col-span-4 py-8">Loading available nodes...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div id="mainApp" class="flex w-full max-w-[1265px] justify-between hidden">
+        <!-- Column 1: Left Navigation Sidebar -->
+        <header class="w-[275px] flex-col justify-between hidden sm:flex sticky top-0 h-screen px-2 pb-4">
+            <div class="flex flex-col mt-1">
+                <!-- Logo -->
+                <div class="p-3 w-max rounded-full hover:bg-bgHover cursor-pointer mb-2 transition-colors">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" class="w-8 h-8 fill-current text-white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                </div>
+                <!-- Nav Items -->
+                <nav class="flex flex-col gap-1 w-full">
+                    <a href="#" class="flex items-center gap-5 p-3 w-max rounded-full hover:bg-bgHover transition-colors text-xl font-bold">
+                        <svg viewBox="0 0 24 24" class="w-7 h-7 fill-current"><path d="M12 1.696L.622 8.807l1.06 1.696L3 9.679V19.5C3 20.881 4.119 22 5.5 22h13c1.381 0 2.5-1.119 2.5-2.5V9.679l1.318.824 1.06-1.696L12 1.696zM12 16.5c-1.933 0-3.5-1.567-3.5-3.5s1.567-3.5 3.5-3.5 3.5 1.567 3.5 3.5-1.567 3.5-3.5 3.5z"></path></svg>
+                        <span>Home</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-5 p-3 w-max rounded-full hover:bg-bgHover transition-colors text-xl">
+                        <svg viewBox="0 0 24 24" class="w-7 h-7 fill-current"><path d="M21 8.5C21 5.46 18.54 3 15.5 3c-2.12 0-3.97 1.2-4.8 2.96-.28-.09-.58-.14-.9-.14-1.65 0-3 1.35-3 3 0 .42.1.81.25 1.18C3.76 10.97 1 14.16 1 18c0 1.65 1.35 3 3 3h16c1.65 0 3-1.35 3-3 0-4.5-3.21-8.23-7.55-9.25zM4 19c-.55 0-1-.45-1-1 0-3.31 2.69-6 6-6h2v-2h-2c-.55 0-1-.45-1-1 0-.55.45-1 1-1 .1 0 .2.02.29.05C10.05 6.32 12.56 5 15.5 5c1.93 0 3.5 1.57 3.5 3.5 0 .15-.02.29-.05.43-.08.35.05.71.35.88C21.41 11.02 23 13.33 23 16c0 .55-.45 1-1 1h-3v2h3c.55 0 1 .45 1 1s-.45 1-1 1H4z"></path></svg>
+                        <span>Network Nodes</span>
+                    </a>
+                </nav>
+                <button class="mt-4 bg-twitter hover:bg-twitterHover text-white font-bold py-3.5 px-8 rounded-full w-[90%] text-lg transition-colors shadow-sm" onclick="focusCompose()">
+                    Verify Claim
+                </button>
+            </div>
+            
+            <!-- Node Switcher (Profile Area) -->
+            <div class="relative w-[90%]">
+                <div id="nodeSwitcherMenu" class="hidden absolute bottom-full left-0 w-full mb-2 bg-black border border-grayBorder rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.1)] py-2 z-50 overflow-hidden">
+                    <div class="px-4 py-2 text-sm font-bold border-b border-grayBorder text-textGray">Switch Identity</div>
+                    <div id="nodeSwitcherList" class="max-h-[300px] overflow-y-auto"></div>
+                </div>
+                
+                <div id="currentUserProfile" class="flex items-center justify-between hover:bg-bgHover p-3 rounded-full cursor-pointer transition-colors w-full" onclick="toggleNodeSwitcher()">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Column 2: The Main Feed -->
+        <main class="w-full sm:w-[600px] border-x border-grayBorder min-h-screen">
+            <!-- Sticky Header -->
+            <div class="sticky top-0 bg-black/80 backdrop-blur-md z-10 border-b border-grayBorder px-4 py-3 flex gap-6 cursor-pointer">
+                <div class="flex flex-col justify-center w-max">
+                    <span class="font-bold text-lg">Truth Feed</span>
+                    <div class="h-1 bg-twitter rounded-full mt-1 w-full"></div>
+                </div>
+            </div>
+
+            <!-- Compose Area -->
+            <div class="px-4 py-3 border-b border-grayBorder flex gap-3">
+                <div id="composeAvatar" class="w-10 h-10 rounded-full shrink-0"></div>
+                <div class="flex flex-col w-full pt-1">
+                    <textarea id="composeInput" class="w-full bg-transparent text-xl placeholder-textGray outline-none resize-none hide-scrollbar overflow-hidden" rows="2" placeholder="What geopolitical claim needs verifying?" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-grayBorder">
+                        <div class="flex gap-2 text-twitter">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current cursor-pointer hover:bg-twitter/10 rounded-full"><path d="M3 5.5C3 4.119 4.119 3 5.5 3h13C19.881 3 21 4.119 21 5.5v13c0 1.381-1.119 2.5-2.5 2.5h-13C4.119 21 3 19.881 3 18.5v-13z"></path></svg>
+                        </div>
+                        <button id="postBtn" class="bg-twitter hover:bg-twitterHover text-white font-bold py-1.5 px-4 rounded-full text-sm font-bold transition-colors disabled:opacity-50" onclick="postClaim()">
+                            Post & Verify
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Feed -->
+            <div id="feedContainer" class="flex flex-col pb-20">
+                <div class="p-8 text-center text-textGray">Loading ledger data...</div>
+            </div>
+        </main>
+
+        <!-- Column 3: Right Sidebar (Analytics + Blockchain Feed) -->
+        <aside class="w-[350px] hidden lg:flex flex-col pl-8 pr-2 pt-1 pb-4 min-h-screen">
+            <div class="sticky top-0 bg-black pt-1 pb-2 z-10">
+                <div class="bg-[#202327] rounded-full flex items-center px-4 py-2.5 group focus-within:bg-black focus-within:ring-1 focus-within:ring-twitter border border-transparent focus-within:border-twitter transition-all">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5 text-textGray group-focus-within:text-twitter fill-current"><path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.795 0 3.419-.726 4.596-1.904 1.178-1.177 1.904-2.801 1.904-4.596 0-3.59-2.91-6.5-6.5-6.5zm-8.5 6.5c0-4.694 3.806-8.5 8.5-8.5s8.5 3.806 8.5 8.5c0 1.986-.682 3.815-1.824 5.262l4.781 4.781-1.414 1.414-4.781-4.781c-1.447 1.142-3.276 1.824-5.262 1.824-4.694 0-8.5-3.806-8.5-8.5z"></path></svg>
+                    <input type="text" placeholder="Search the Ledger" class="bg-transparent text-white outline-none w-full ml-3 placeholder-textGray text-[15px]">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4 mt-2">
+                <!-- Network Status Card -->
+                <div class="bg-[#16181C] rounded-2xl flex flex-col pt-3 pb-4 px-4">
+                    <h2 class="font-extrabold text-xl mb-3">Network Status</h2>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2.5 h-2.5 rounded-full bg-verified shadow-[0_0_8px_#00BA7C]"></div>
+                            <span class="font-semibold text-[15px]">Algorand TestNet: Online</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2.5 h-2.5 rounded-full bg-verified shadow-[0_0_8px_#00BA7C]"></div>
+                            <span class="font-semibold text-[15px]">AI Ensemble: Active</span>
+                        </div>
+                        <div class="flex items-center gap-2 pl-5">
+                            <span class="text-textGray text-[13px]">DeBERTa · BART · RoBERTa</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent On-Chain Activity Card -->
+                <div class="bg-[#16181C] rounded-2xl flex flex-col pt-3 pb-2 px-4">
+                    <h2 class="font-extrabold text-xl mb-3">Recent On-Chain Activity</h2>
+                    <div id="blockchainFeed" class="flex flex-col gap-2 max-h-[400px] overflow-y-auto hide-scrollbar">
+                        <div id="blockchainEmpty" class="text-textGray text-sm text-center py-4">
+                            <svg viewBox="0 0 24 24" class="w-8 h-8 fill-current mx-auto mb-2 opacity-40"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"></path></svg>
+                            No transactions yet. Reach consensus on a claim to mint a block.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        let allNodes = [];
+        let currentUser = null;
+        let claimsData = [];
+
+        async function init() {
+            try {
+                const res = await fetch('/nodes');
+                allNodes = await res.json();
+                renderNodeGrid();
+                
+                const stored = localStorage.getItem('currentUser');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    const exists = allNodes.find(n => n.id === parsed.id);
+                    if (exists) {
+                        selectNode(exists);
+                    } else {
+                        document.body.classList.add('modal-active');
+                    }
+                } else {
+                    document.body.classList.add('modal-active');
+                }
+            } catch (e) {
+                console.error("Failed to load nodes", e);
+            }
+        }
+
+        function renderNodeGrid() {
+            const grid = document.getElementById('nodeGrid');
+            grid.innerHTML = allNodes.map(node => `
+                <div onclick="selectNode(${JSON.stringify(node).replace(/"/g, '&quot;')})" class="flex flex-col items-center justify-center p-4 bg-bgHover rounded-2xl cursor-pointer hover:bg-white/10 transition-colors border border-grayBorder hover:border-twitter">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-tr ${node.color} mb-3 flex items-center justify-center font-bold text-xl shadow-lg">
+                        ${node.name.charAt(0)}
+                    </div>
+                    <span class="font-bold text-sm text-center">${node.name}</span>
+                    <span class="text-textGray text-xs mt-1">@${node.handle}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectNode(node) {
+            currentUser = node;
+            localStorage.setItem('currentUser', JSON.stringify(node));
+            
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.body.classList.remove('modal-active');
+            
+            updateCurrentUserUI();
+            renderNodeSwitcher();
+            fetchClaims();
+        }
+
+        function updateCurrentUserUI() {
+            const composeAvatar = document.getElementById('composeAvatar');
+            composeAvatar.className = `w-10 h-10 rounded-full shrink-0 bg-gradient-to-tr ${currentUser.color}`;
+            
+            const profile = document.getElementById('currentUserProfile');
+            profile.innerHTML = `
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${currentUser.color} shrink-0 flex items-center justify-center font-bold text-sm">
+                        ${currentUser.name.charAt(0)}
+                    </div>
+                    <div class="truncate">
+                        <p class="font-bold text-sm leading-tight truncate">${currentUser.name}</p>
+                        <p class="text-textGray text-sm leading-tight truncate">@${currentUser.handle}</p>
+                    </div>
+                </div>
+                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current shrink-0 ml-2"><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path></svg>
+            `;
+        }
+
+        function renderNodeSwitcher() {
+            const list = document.getElementById('nodeSwitcherList');
+            const others = allNodes.filter(n => n.id !== currentUser.id);
+            
+            list.innerHTML = others.map(node => `
+                <div onclick="selectNode(${JSON.stringify(node).replace(/"/g, '&quot;')}); toggleNodeSwitcher()" class="flex items-center gap-3 p-3 hover:bg-bgHover cursor-pointer transition-colors">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${node.color} shrink-0 flex items-center justify-center font-bold text-sm">
+                        ${node.name.charAt(0)}
+                    </div>
+                    <div class="truncate">
+                        <p class="font-bold text-sm leading-tight truncate">${node.name}</p>
+                        <p class="text-textGray text-sm leading-tight truncate">@${node.handle}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleNodeSwitcher() {
+            const menu = document.getElementById('nodeSwitcherMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function focusCompose() {
+            document.getElementById('composeInput').focus();
+        }
+
+        async function fetchClaims() {
+            try {
+                const res = await fetch('/claims');
+                if (res.ok) {
+                    const rawClaims = await res.json();
+                    claimsData = rawClaims.map(claim => {
+                        const verifyVotes = claim.vote_counts?.verify || 0;
+                        const refuteVotes = claim.vote_counts?.refute || 0;
+                        
+                        const human_points = Math.max(verifyVotes, refuteVotes);
+                        
+                        let ai_vote = "Pending";
+                        if (claim.analysis) {
+                            const lowerAnalysis = claim.analysis.toLowerCase();
+                            if (lowerAnalysis.includes("verified")) ai_vote = "Verified";
+                            else if (lowerAnalysis.includes("refuted")) ai_vote = "Refuted";
+                            else if (lowerAnalysis.includes("uncertain")) ai_vote = "Uncertain";
+                        }
+                        
+                        const ai_verify_pts = ai_vote === 'Verified' ? 3 : 0;
+                        const ai_refute_pts = ai_vote === 'Refuted' ? 3 : 0;
+                        
+                        const total_verify = ai_verify_pts + verifyVotes;
+                        const total_refute = ai_refute_pts + refuteVotes;
+                        
+                        const is_deadlock = (total_verify === 3 && total_refute === 3);
+                        const points = Math.max(total_verify, total_refute);
+                        
+                        let custom_status = claim.status === 'pending' ? 'pending_consensus' : 'consensus_reached';
+                        if (claim.status === 'pending' && points >= 4) {
+                            custom_status = 'consensus_reached';
+                        }
+                        
+                        return {
+                            ...claim,
+                            human_points,
+                            ai_vote,
+                            points,
+                            is_deadlock,
+                            custom_status
+                        };
+                    });
+                    renderFeed();
+                }
+            } catch (e) {
+                console.error("Failed to fetch claims", e);
+            }
+        }
+
+        async function postClaim() {
+            const input = document.getElementById('composeInput');
+            const claimText = input.value.trim();
+            if (!claimText || !currentUser) return;
+
+            const btn = document.getElementById('postBtn');
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+
+            try {
+                const res = await fetch('/claims', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ node_id: currentUser.id, claim_text: claimText })
+                });
+                
+                if (res.ok) {
+                    input.value = '';
+                    input.style.height = '';
+                    await fetchClaims();
+                } else {
+                    const err = await res.json();
+                    alert(err.detail || "Error posting claim");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Post & Verify';
+            }
+        }
+
+        async function castVote(claimId, voteType) {
+            if (!currentUser) return;
+            try {
+                // Optimistic UI update for AI processing if it hits the threshold
+                const claimDiv = document.getElementById(`claim-${claimId}`);
+                if (claimDiv) {
+                     const barText = claimDiv.querySelector('.consensus-text');
+                     if (barText && !barText.innerHTML.includes('Awaiting AI Node Verification')) {
+                         barText.innerHTML = `<svg class="animate-spin mr-2 h-4 w-4 text-amber-500 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Awaiting AI Node Verification (3 pts)...`;
+                     }
+                }
+
+                // Show blockchain pending animation in sidebar
+                showBlockchainPending();
+
+                const res = await fetch('/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ claim_id: claimId, node_id: currentUser.id, vote: voteType })
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.detail || "Error casting vote");
+                    // Remove pending loader on error
+                    document.querySelectorAll('[id^="bc-loader-"]').forEach(el => el.remove());
+                } else if (data.status) {
+                    console.log("Vote Response Parsed -> Status:", data.status, "Total Points:", data.points, "AI Vote:", data.ai_vote, "Human Points:", data.human_points);
+                    // Blockchain visualization: if consensus was reached and we got a tx_id
+                    if (data.status === 'consensus_reached' && data.tx_id && !data.tx_id.startsWith('ERROR')) {
+                        addBlockCard(data.tx_id, data.ai_vote);
+                    } else {
+                        // No transaction minted, remove the pending loader
+                        document.querySelectorAll('[id^="bc-loader-"]').forEach(el => el.remove());
+                    }
+                }
+                await fetchClaims();
+            } catch (e) {
+                console.error("Failed to cast vote", e);
+            }
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('feedContainer');
+            if (claimsData.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-textGray">No claims in the ledger yet. Be the first!</div>';
+                return;
+            }
+
+            container.innerHTML = claimsData.map(claim => {
+                const isPending = claim.status === 'pending';
+                const verifyVotes = claim.vote_counts?.verify || 0;
+                const refuteVotes = claim.vote_counts?.refute || 0;
+                const userVoted = currentUser ? claim.vote_counts?.node_votes?.[currentUser.id] : null;
+
+                const totalHumanVotes = verifyVotes + refuteVotes;
+                const maxHumanSlots = claim.is_deadlock ? 4 : 3;
+
+                let statusColor = 'text-amber-500';
+                let bgClass = 'bg-amber-500/10';
+                let borderClass = 'border-amber-500/30';
+                let consensusText = claim.is_deadlock ? `SUDDEN DEATH TIE-BREAKER - 3 vs 3` : `PENDING CONSENSUS (HUMANS: ${totalHumanVotes}/${maxHumanSlots})`;
+                let showLoader = false;
+
+                if (claim.custom_status === 'pending_consensus') {
+                    if (claim.human_points >= 2 && claim.ai_vote === 'Pending') {
+                        consensusText = 'Awaiting AI Node Verification (3 pts)...';
+                        showLoader = true;
+                    } else if (claim.human_points >= 2 && claim.ai_vote !== 'Pending') {
+                         consensusText = claim.is_deadlock ? `SUDDEN DEATH TIE-BREAKER - 3 vs 3` : `PENDING CONSENSUS (HUMANS: ${totalHumanVotes}/${maxHumanSlots})`;
+                    }
+                } else if (claim.custom_status === 'consensus_reached') {
+                    if (claim.status === 'Verified') {
+                        statusColor = 'text-verified';
+                        bgClass = 'bg-verified/10';
+                        borderClass = 'border-verified/30';
+                        if (claim.human_points >= maxHumanSlots) {
+                            consensusText = `VERIFIED: Consensus Reached (${claim.points} pts) - Human Network Override`;
+                        } else {
+                            consensusText = `VERIFIED: Consensus Reached (${claim.points} pts) - AI + Human Agreement`;
+                        }
+                    } else if (claim.status === 'Refuted') {
+                        statusColor = 'text-refuted';
+                        bgClass = 'bg-refuted/10';
+                        borderClass = 'border-refuted/30';
+                        if (claim.human_points >= maxHumanSlots) {
+                            consensusText = `REFUTED: Consensus Reached (${claim.points} pts) - Human Network Override`;
+                        } else {
+                            consensusText = `REFUTED: Consensus Reached (${claim.points} pts) - AI + Human Agreement`;
+                        }
+                    }
+                }
+
+                const confStr = claim.confidence_score ? ` · ${(claim.confidence_score * 100).toFixed(1)}% Conf.` : '';
+                const txLink = claim.blockchain_explorer_url ? ` · <a href="${claim.blockchain_explorer_url}" target="_blank" class="hover:underline ml-1">TXID</a>` : '';
+                const loaderSvg = showLoader ? `<svg class="animate-spin mr-2 h-4 w-4 ${statusColor} inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>` : '';
+
+                let actionButtons = '';
+                if (isPending) {
+                    const isOwner = currentUser && claim.node_id === currentUser.id;
+                    if (isOwner) {
+                        actionButtons = `
+                            <div class="flex gap-3 mt-3">
+                                <button disabled onclick="castVote('${claim.id}', 'verify')" class="flex-1 bg-verified/5 text-verified/50 py-2 rounded-full font-bold text-[13px] border border-verified/10 cursor-not-allowed">Vote Verify</button>
+                                <button disabled onclick="castVote('${claim.id}', 'refute')" class="flex-1 bg-refuted/5 text-refuted/50 py-2 rounded-full font-bold text-[13px] border border-refuted/10 cursor-not-allowed">Vote Refute</button>
+                            </div>
+                            <div class="text-xs text-textGray mt-2 px-1 italic">You cannot vote on your own post</div>
+                        `;
+                    } else if (userVoted) {
+                        actionButtons = `<div class="text-sm text-textGray font-semibold mt-2 px-1">Your Node voted to <span class="capitalize">${userVoted}</span></div>`;
+                    } else {
+                        actionButtons = `
+                            <div class="flex gap-3 mt-3">
+                                <button onclick="castVote('${claim.id}', 'verify')" class="flex-1 bg-verified/10 text-verified hover:bg-verified/20 py-2 rounded-full font-bold text-[13px] border border-verified/30 transition-colors">Vote Verify</button>
+                                <button onclick="castVote('${claim.id}', 'refute')" class="flex-1 bg-refuted/10 text-refuted hover:bg-refuted/20 py-2 rounded-full font-bold text-[13px] border border-refuted/30 transition-colors">Vote Refute</button>
+                            </div>
+                        `;
+                    }
+                }
+
+                let noteContent = '';
+                if (claim.is_flagged && claim.ai_correction_note) {
+                    noteContent = claim.ai_correction_note;
+                } else if (claim.analysis) {
+                    noteContent = claim.analysis;
+                }
+
+                const analysisNote = noteContent ? `
+                    <div class="mt-3 bg-[#16181C] rounded-xl p-3 border border-grayBorder">
+                        <div class="flex items-center gap-1.5 mb-1 text-textGray">
+                            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"></path></svg>
+                            <span class="font-bold text-[13px]">TruthChain Automated Note</span>
+                        </div>
+                        <p class="text-[14px] leading-snug">${noteContent}</p>
+                    </div>
+                ` : '';
+
+                const author = claim.nodes || { name: 'Unknown', handle: 'unknown', color: 'from-gray-500 to-gray-400' };
+
+                return `
+                <div class="px-4 py-3 border-b border-grayBorder hover:bg-bgHover/50 transition-colors flex gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${author.color} shrink-0 mt-1 flex items-center justify-center font-bold text-sm">
+                        ${author.name.charAt(0)}
+                    </div>
+                    <div class="flex flex-col w-full">
+                        <div class="flex items-center gap-1">
+                            <span class="font-bold text-[15px] hover:underline cursor-pointer">${author.name}</span>
+                            <span class="text-textGray text-[15px]">@${author.handle}</span>
+                        </div>
+                        <p class="text-[15px] mt-0.5 leading-snug text-[#E7E9EA] whitespace-pre-wrap">${claim.claim_text}</p>
+                        
+                        ${analysisNote}
+                        
+                        <div id="claim-${claim.id}" class="consensus-bar flex items-center justify-between py-2.5 px-3 rounded-xl ${bgClass} border ${borderClass} transition-all mt-3">
+                            <div class="flex items-center w-full">
+                                <span class="consensus-text ${statusColor} font-bold text-[13px] uppercase tracking-wide mr-1 flex items-center">
+                                    ${loaderSvg}${consensusText}
+                                </span>
+                                <span class="${statusColor} text-[13px] opacity-80">${confStr}</span>
+                                <span class="${statusColor} text-[13px] opacity-80">${txLink}</span>
+                            </div>
+                            <div class="text-right whitespace-nowrap bg-black/30 px-2 py-0.5 rounded-md border border-grayBorder/50">
+                                <span class="text-verified font-bold text-[11px]">V:${verifyVotes}</span>
+                                <span class="text-textGray text-[11px] mx-1">|</span>
+                                <span class="text-refuted font-bold text-[11px]">R:${refuteVotes}</span>
+                            </div>
+                        </div>
+                        
+                        ${actionButtons}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // ---- Blockchain Sidebar Helpers ----
+        function showBlockchainPending() {
+            const feed = document.getElementById('blockchainFeed');
+            const emptyMsg = document.getElementById('blockchainEmpty');
+            if (emptyMsg) emptyMsg.remove();
+
+            const loaderId = 'bc-loader-' + Date.now();
+            const loaderHtml = `
+                <div id="${loaderId}" class="flex items-center gap-3 p-3 rounded-xl border border-twitter/30 bg-twitter/5 pulse-glow block-card-enter">
+                    <svg class="animate-spin h-5 w-5 text-twitter shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-twitter font-bold text-[13px]">Broadcasting to Algorand TestNet...</p>
+                        <p class="text-textGray text-[11px]">Waiting for block confirmation</p>
+                    </div>
+                </div>
+            `;
+            feed.insertAdjacentHTML('afterbegin', loaderHtml);
+            return loaderId;
+        }
+
+        function addBlockCard(txId, verdict) {
+            const feed = document.getElementById('blockchainFeed');
+            const emptyMsg = document.getElementById('blockchainEmpty');
+            if (emptyMsg) emptyMsg.remove();
+
+            // Remove any pending loaders
+            feed.querySelectorAll('[id^="bc-loader-"]').forEach(el => el.remove());
+
+            const abbrev = txId.length > 8 ? txId.substring(0, 4) + '...' + txId.substring(txId.length - 4) : txId;
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const verdictColor = verdict === 'Verified' ? 'text-verified' : verdict === 'Refuted' ? 'text-refuted' : 'text-amber-500';
+            const explorerUrl = `https://testnet.algoexplorer.io/tx/${txId}`;
+
+            const cardHtml = `
+                <div class="p-3 rounded-xl border border-grayBorder bg-black/40 block-card-enter hover:bg-bgHover transition-colors">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-verified shadow-[0_0_6px_#00BA7C]"></div>
+                            <span class="text-verified font-bold text-[12px] uppercase tracking-wider">Committed to TestNet</span>
+                        </div>
+                        <span class="text-textGray text-[11px]">${timeStr}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <a href="${explorerUrl}" target="_blank" class="font-mono text-[13px] text-twitter hover:underline" title="${txId}">
+                            TxID: ${abbrev}
+                        </a>
+                        <span class="${verdictColor} text-[11px] font-bold">${verdict || 'N/A'}</span>
+                    </div>
+                </div>
+            `;
+            feed.insertAdjacentHTML('afterbegin', cardHtml);
+
+            // Keep max 10 cards
+            const cards = feed.children;
+            while (cards.length > 10) {
+                cards[cards.length - 1].remove();
+            }
+        }
+
+        // Boot
+        init();
+        setInterval(fetchClaims, 4000); // Polling every 4 seconds
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const profile = document.getElementById('currentUserProfile');
+            const menu = document.getElementById('nodeSwitcherMenu');
+            if (profile && !profile.contains(e.target) && menu && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
