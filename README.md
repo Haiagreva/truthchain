@@ -83,7 +83,7 @@ When consensus is reached, a **0-ALGO self-transaction** is broadcast to the **A
 ### 1. Clone & Install Dependencies
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/truthchain.git
+git clone https://github.com/haiagreva/truthchain.git
 cd truthchain
 pip install -r requirements.txt
 ```
